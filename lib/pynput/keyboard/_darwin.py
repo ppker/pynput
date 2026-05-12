@@ -309,9 +309,9 @@ class Listener(ListenerMixin, _base.Listener):
                         flags = sys_event.data1() & 0x0000FFFF
                         is_press = ((flags & 0xFF00) >> 8) == 0x0A
                         if is_press:
-                            self.on_press(self._SPECIAL_KEYS[key])
+                            self.on_press(self._SPECIAL_KEYS[key], injected)
                         else:
-                            self.on_release(self._SPECIAL_KEYS[key])
+                            self.on_release(self._SPECIAL_KEYS[key], injected)
 
             else:
                 # This is a modifier event---excluding caps lock---for which we
