@@ -109,10 +109,6 @@ class Controller(NotifierMixin, _base.Controller):
                 ctypes.sizeof(INPUT),
             )
 
-        if dx or dy:
-            px, py = self._position_get()
-            self._emit('on_scroll', px, py, dx, dy, True)
-
     def _press(self, button):
         SendInput(
             1,
