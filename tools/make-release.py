@@ -5,22 +5,17 @@ import re
 import subprocess
 import sys
 
-DESCRIPTION = '''Makes a full release.
+DESCRIPTION = """Makes a full release.
 
 This script will update the version number of the package and perform all steps
 necessary to make a full release.
-'''
+"""
 
-ROOT = os.path.join(
-    os.path.dirname(__file__),
-    os.pardir)
+ROOT = os.path.join(os.path.dirname(__file__), os.pardir)
 
 LIB_DIR = os.path.join(ROOT, 'lib')
 
-PACKAGE_NAME = next(
-    name
-    for name in os.listdir(LIB_DIR)
-    if name[0] != '_')
+PACKAGE_NAME = next(name for name in os.listdir(LIB_DIR) if name[0] != '_')
 
 PACKAGE_DIR = os.path.join(LIB_DIR, PACKAGE_NAME)
 
@@ -70,19 +65,19 @@ def update_info(version):
         os.path.join(PACKAGE_DIR, '_info.py'),
         re.compile(r'__version__\s*=\s*(\([0-9]+(\s*,\s*[0-9]+)*\))'),
         1,
-        repr(version))
+        repr(version),
+    )
 
 
 def _update_info_undo():
-    command(
-        'git',
-        'checkout', ROOT)
+    command('git', 'checkout', ROOT)
+
+
 update_info.undo = _update_info_undo
 
 
 def check_readme():
-    """Verifies that the ``README`` is *reStructuredText* compliant.
-    """
+    """Verifies that the ``README`` is *reStructuredText* compliant."""
     python('setup.py', 'check', '--restructuredtext', '--strict')
 
 
@@ -117,9 +112,9 @@ def check_release_notes(version):
         # Display the release notes
         sys.stdout.write('Release notes for %s:\n' % header)
         sys.stdout.write(
-            '\n'.join(
-                '  %s' % release_note
-                for release_note in release_notes) + '\n')
+            '\n'.join('  %s' % release_note for release_note in release_notes)
+            + '\n'
+        )
         sys.stdout.write('Is this correct [yes/no]? ')
         sys.stdout.flush()
         response = sys.stdin.readline().strip()
@@ -134,15 +129,13 @@ def commit_changes(version):
 
     :param tuple version: The version that is being released.
     """
-    git('commit',
-        '-a',
-        '-m', 'Release %s' % '.'.join(str(v) for v in version))
+    git('commit', '-a', '-m', 'Release %s' % '.'.join(str(v) for v in version))
 
 
 def _commit_changes_undo():
-    git('reset',
-        '--hard',
-        'HEAD^')
+    git('reset', '--hard', 'HEAD^')
+
+
 commit_changes.undo = _commit_changes_undo
 
 
@@ -152,22 +145,24 @@ def tag_release(version):
     :param version: The version that is being released.
     :type version: tuple of version parts
     """
-    git('tag',
+    git(
+        'tag',
         '-a',
-        '-m', 'Release %s' % '.'.join(str(v) for v in version),
-        'v' + '.'.join(str(v) for v in version))
+        '-m',
+        'Release %s' % '.'.join(str(v) for v in version),
+        'v' + '.'.join(str(v) for v in version),
+    )
 
 
 def _tag_release_undo(version):
-    git('tag',
-        '-d',
-        'v' + '.'.join(str(v) for v in version))
+    git('tag', '-d', 'v' + '.'.join(str(v) for v in version))
+
+
 tag_release.undo = _tag_release_undo
 
 
 def push_to_origin():
-    """Pushes master to origin.
-    """
+    """Pushes master to origin."""
     print('Pushing to origin...')
 
     git('push', 'origin', 'HEAD:master')
@@ -175,15 +170,10 @@ def push_to_origin():
 
 
 def build_packages():
-    """Builds the packages, generating artifacts under ``dist``.
-    """
+    """Builds the packages, generating artifacts under ``dist``."""
     print('Building packages...')
 
-    python(
-        os.path.join(ROOT, 'setup.py'),
-        'sdist',
-        'bdist_egg',
-        'bdist_wheel')
+    python(os.path.join(ROOT, 'setup.py'), 'sdist', 'bdist_wheel')
 
 
 def upload_to_pypi(version):
@@ -194,10 +184,12 @@ def upload_to_pypi(version):
     print('Uploading to PyPi...')
 
     python(
-        '-m', 'twine',
+        '-m',
+        'twine',
         'upload',
         '--skip-existing',
-        os.path.join(ROOT, 'dist', '*'))
+        os.path.join(ROOT, 'dist', '*'),
+    )
 
 
 def git(*args):
@@ -244,9 +236,11 @@ def gsub(path, regex, group, replacement):
     def sub(match):
         full = match.group(0)
         o = match.start(0)
-        return full[:match.start(group) - o] \
-            + replacement \
-            + full[match.end(group) - o:]
+        return (
+            full[: match.start(group) - o]
+            + replacement
+            + full[match.end(group) - o :]
+        )
 
     with open(path, 'w') as f:
         f.write(regex.sub(sub, data))
@@ -261,10 +255,7 @@ def command(*args):
 
     :raises RuntimeError: if the command returns non-zero
     """
-    g = subprocess.Popen(
-        args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+    g = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     stdout, stderr = g.communicate()
     if g.returncode != 0:
@@ -272,7 +263,8 @@ def command(*args):
             'Failed to execute <%s> (%d): %s',
             ' '.join(args),
             g.returncode,
-            stdout.decode('utf-8') + '\n\n' + stderr.decode('utf-8'))
+            stdout.decode('utf-8') + '\n\n' + stderr.decode('utf-8'),
+        )
     else:
         return stdout.decode('utf-8')
 
@@ -283,8 +275,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
 
     parser.add_argument(
-        'version',
-        type=lambda s: tuple(int(v) for v in s.split('.')))
+        'version', type=lambda s: tuple(int(v) for v in s.split('.'))
+    )
 
     try:
         main(**vars(parser.parse_args()))
